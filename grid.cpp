@@ -80,12 +80,9 @@ Grid::Grid(int width, int height) {
     _width = width;
     _height = height;
 
-    cells = new Cell *[width];
-    for (int x = 0; x < width; x++) {
-        cells[x] = new Cell[height];
-        for (int y = 0; y < height; y++) {
-            cells[x][y] = Cell::DEAD;
-        }
+    cells = (Cell *) malloc(width * height * sizeof(Cell));
+    for (int i = 0; i < width * height; i++) {
+        cells[i] = DEAD;
     }
 
     std::cout << "Created a new grid with size width: " << width << " - height: " << height << std::endl;
@@ -198,12 +195,9 @@ int Grid::get_total_cells() const {
  */
 int Grid::get_alive_cells() const {
     int count = 0;
-    for (int y = 0; y < _height; y++) {
-        for (int x = 0; x < _width; x++) {
-            if (cells[x][y] == Cell::ALIVE) {
-                count++;
-            }
-        }
+    for (int i = 0; i < _width * _height; i++) {
+        if (cells[i] == ALIVE)
+            count++;
     }
 
     return count;
@@ -234,12 +228,9 @@ int Grid::get_alive_cells() const {
  */
 int Grid::get_dead_cells() const {
     int count = 0;
-    for (int y = 0; y < _height; y++) {
-        for (int x = 0; x < _width; x++) {
-            if (cells[x][y] == Cell::DEAD) {
-                count++;
-            }
-        }
+    for (int i = 0; i < _width * _height; i++) {
+        if (cells[i] == DEAD)
+            count++;
     }
 
     return count;
@@ -263,6 +254,9 @@ int Grid::get_dead_cells() const {
  *      The new edge size for both the width and height of the grid.
  */
 
+void Grid::resize(int square_size) {
+    resize(square_size, square_size);
+}
 
 /**
  * Grid::resize(width, height)
@@ -285,6 +279,26 @@ int Grid::get_dead_cells() const {
  *      The new height for the grid.
  */
 
+void Grid::resize(int width, int height) {
+    Cell *newCells;
+    int newWidth = width;
+    int newHeight = height;
+
+    newCells = (Cell *) malloc(newWidth * newHeight * sizeof(Cell));
+    for (int x = 0; x < newWidth; x++) {
+        for (int y = 0; y < newHeight; y++) {
+            newCells[newWidth * x + y] = Cell::DEAD;
+            if (x < _width && y < _height)
+                newCells[newWidth * x + y] = get(x, y);
+        }
+    }
+
+    //delete cells;
+
+    cells = newCells;
+    _width = newWidth;
+    _height = newHeight;
+}
 
 /**
  * Grid::get_index(x, y)
@@ -303,6 +317,9 @@ int Grid::get_dead_cells() const {
  *      The 1d offset from the start of the data array where the desired cell is located.
  */
 
+int Grid::get_index(int x, int y) const {
+    return _width * x + y;
+}
 
 /**
  * Grid::get(x, y)
@@ -333,6 +350,13 @@ int Grid::get_dead_cells() const {
  *      std::exception or sub-class if x,y is not a valid coordinate within the grid.
  */
 
+Cell Grid::get(int x, int y) const {
+    try {
+        return operator()(x, y);
+    } catch (std::exception &e) {
+        std::cerr << "Something went wrong!" << std::endl;
+    }
+}
 
 /**
  * Grid::set(x, y, value)
@@ -360,7 +384,13 @@ int Grid::get_dead_cells() const {
  * @throws
  *      std::exception or sub-class if x,y is not a valid coordinate within the grid.
  */
-
+void Grid::set(int x, int y, Cell value) {
+    try {
+        operator()(x, y) = value;
+    } catch (std::exception &e) {
+        std::cerr << "Something went wrong!" << std::endl;
+    }
+}
 
 /**
  * Grid::operator()(x, y)
@@ -397,7 +427,13 @@ int Grid::get_dead_cells() const {
  * @throws
  *      std::runtime_error or sub-class if x,y is not a valid coordinate within the grid.
  */
-
+Cell &Grid::operator()(int x, int y) {
+    if (x < 0 || x >= _width || y < 0 || y >= _height) {
+        throw std::exception();
+    } else {
+        return cells[get_index(x, y)];
+    }
+}
 
 /**
  * Grid::operator()(x, y)
@@ -429,7 +465,13 @@ int Grid::get_dead_cells() const {
  * @throws
  *      std::exception or sub-class if x,y is not a valid coordinate within the grid.
  */
-
+Cell &Grid::operator()(int x, int y) const {
+    if (x < 0 || x >= _width || y < 0 || y >= _height) {
+        throw std::exception();
+    } else {
+        return cells[get_index(x, y)];
+    }
+}
 
 /**
  * Grid::crop(x0, y0, x1, y1)
@@ -444,7 +486,7 @@ int Grid::get_dead_cells() const {
  *      Grid y(4, 4);
  *
  *      // Crop the centre 2x2 in y, trimming a 1 cell border off all sides
- *      Grid x = y.crop(x, 1, 1, 3, 3);
+ *      Grid x = y.crop(1, 1, 3, 3);
  *
  * @param x0
  *      Left coordinate of the crop window on x-axis.
@@ -465,7 +507,22 @@ int Grid::get_dead_cells() const {
  *      std::exception or sub-class if x0,y0 or x1,y1 are not valid coordinates within the grid
  *      or if the crop window has a negative size.
  */
+Grid Grid::crop(int x0, int y0, int x1, int y1) const {
+    x0--;
+    y0--;
+    x1--;
+    y1--;
+    if (x0 < 0 || x1 > _width || y0 < 0 || y1 > _height || x1 - x0 <= 0 || y1 - y0 <= 0) {
+        throw std::exception();
+    }
 
+    Grid newGrid = Grid(x1 - x0, y1 - y0);
+    for (int y = y0; y < y1; y++) {
+        for (int x = x0; x < x1; x++) {
+            newGrid.set(x, y, cells[get_index(x, y)]);
+        }
+    }
+}
 
 /**
  * Grid::merge(other, x0, y0, alive_only = false)

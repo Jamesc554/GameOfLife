@@ -26,8 +26,11 @@ enum Cell : char {
  */
 class Grid {
 private:
-    Cell **cells;
+    Cell *cells;
     int _width, _height;
+
+    int get_index(int x, int y) const;
+
 public:
     Grid();
 
@@ -44,6 +47,20 @@ public:
     int get_alive_cells() const;
 
     int get_dead_cells() const;
+
+    void resize(int square_size);
+
+    void resize(int width, int height);
+
+    Cell get(int x, int y) const;
+
+    void set(int x, int y, Cell value);
+
+    Cell &operator()(int x, int y);
+
+    Cell &operator()(int x, int y) const;
+
+    Grid crop(int x0, int y0, int x1, int y1) const;
 
     // How to draw an owl:
     //      Step 1. Draw a circle.
