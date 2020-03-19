@@ -11,6 +11,7 @@
  * @author 962940
  * @date March, 2020
  */
+#include <iostream>
 #include "grid.h"
 
 // Include the minimal number of headers needed to support your implementation.
@@ -28,6 +29,7 @@
  *      Grid grid;
  *
  */
+Grid::Grid() : Grid(0) {}
 
 
 /**
@@ -53,6 +55,7 @@
  * @param square_size
  *      The edge size to use for the width and height of the grid.
  */
+Grid::Grid(int square_size) : Grid(square_size, square_size) {}
 
 
 /**
@@ -71,7 +74,22 @@
  * @param height
  *      The height of the grid.
  */
+Grid::Grid(int width, int height) {
+    // Create a new 2D array of cells [x][y] and populate it with DEAD cells
 
+    _width = width;
+    _height = height;
+
+    cells = new Cell *[width];
+    for (int x = 0; x < width; x++) {
+        cells[x] = new Cell[height];
+        for (int y = 0; y < height; y++) {
+            cells[x][y] = Cell::DEAD;
+        }
+    }
+
+    std::cout << "Created a new grid with size width: " << width << " - height: " << height << std::endl;
+}
 
 /**
  * Grid::get_width()
@@ -97,6 +115,9 @@
  *      The width of the grid.
  */
 
+int Grid::get_width() const {
+    return _width;
+}
 
 /**
  * Grid::get_height()
@@ -121,7 +142,9 @@
  * @return
  *      The height of the grid.
  */
-
+int Grid::get_height() const {
+    return _height;
+}
 
 /**
  * Grid::get_total_cells()
@@ -146,7 +169,9 @@
  * @return
  *      The number of total cells.
  */
-
+int Grid::get_total_cells() const {
+    return _width * _height;
+}
 
 /**
  * Grid::get_alive_cells()
@@ -171,7 +196,18 @@
  * @return
  *      The number of alive cells.
  */
+int Grid::get_alive_cells() const {
+    int count = 0;
+    for (int y = 0; y < _height; y++) {
+        for (int x = 0; x < _width; x++) {
+            if (cells[x][y] == Cell::ALIVE) {
+                count++;
+            }
+        }
+    }
 
+    return count;
+}
 
 /**
  * Grid::get_dead_cells()
@@ -196,7 +232,18 @@
  * @return
  *      The number of dead cells.
  */
+int Grid::get_dead_cells() const {
+    int count = 0;
+    for (int y = 0; y < _height; y++) {
+        for (int x = 0; x < _width; x++) {
+            if (cells[x][y] == Cell::DEAD) {
+                count++;
+            }
+        }
+    }
 
+    return count;
+}
 
 /**
  * Grid::resize(square_size)
