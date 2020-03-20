@@ -12,6 +12,7 @@
 
 // Add the minimal number of includes you need in order to declare the class.
 // #include ...
+#include <vector>
 
 /**
  * A Cell is a char limited to two named values for Cell::DEAD and Cell::ALIVE.
@@ -61,6 +62,8 @@ public:
     Cell &operator()(int x, int y) const;
 
     Grid crop(int x0, int y0, int x1, int y1) const;
+
+    void merge(Grid other, int x0, int y0, bool alive_only = false);
 
     // How to draw an owl:
     //      Step 1. Draw a circle.

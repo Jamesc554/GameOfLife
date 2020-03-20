@@ -80,7 +80,8 @@ Grid::Grid(int width, int height) {
     _width = width;
     _height = height;
 
-    cells = (Cell *) malloc(width * height * sizeof(Cell));
+    //cells = new Cell[width * height];
+    cells = new Cell[width * height];
     for (int i = 0; i < width * height; i++) {
         cells[i] = DEAD;
     }
@@ -284,16 +285,14 @@ void Grid::resize(int width, int height) {
     int newWidth = width;
     int newHeight = height;
 
-    newCells = (Cell *) malloc(newWidth * newHeight * sizeof(Cell));
+    newCells = new Cell[width * height];
     for (int x = 0; x < newWidth; x++) {
         for (int y = 0; y < newHeight; y++) {
-            newCells[newWidth * x + y] = Cell::DEAD;
+            newCells[x + newWidth * y] = Cell::DEAD;
             if (x < _width && y < _height)
-                newCells[newWidth * x + y] = get(x, y);
+                newCells[x + newWidth * y] = get(x, y);
         }
     }
-
-    //delete cells;
 
     cells = newCells;
     _width = newWidth;
@@ -318,7 +317,7 @@ void Grid::resize(int width, int height) {
  */
 
 int Grid::get_index(int x, int y) const {
-    return _width * x + y;
+    return x + _width * y;
 }
 
 /**
@@ -356,6 +355,8 @@ Cell Grid::get(int x, int y) const {
     } catch (std::exception &e) {
         std::cerr << "Something went wrong!" << std::endl;
     }
+
+    return DEAD;
 }
 
 /**
@@ -386,9 +387,10 @@ Cell Grid::get(int x, int y) const {
  */
 void Grid::set(int x, int y, Cell value) {
     try {
-        operator()(x, y) = value;
+        Cell &cell = Grid::operator()(x, y);
+        cell = value;
     } catch (std::exception &e) {
-        std::cerr << "Something went wrong!" << std::endl;
+        std::cerr << "Grid::set::Something went wrong!" << std::endl;
     }
 }
 
@@ -469,7 +471,8 @@ Cell &Grid::operator()(int x, int y) const {
     if (x < 0 || x >= _width || y < 0 || y >= _height) {
         throw std::exception();
     } else {
-        return cells[get_index(x, y)];
+        Cell &cell = cells[get_index(x, y)];
+        return cell;
     }
 }
 
@@ -508,20 +511,18 @@ Cell &Grid::operator()(int x, int y) const {
  *      or if the crop window has a negative size.
  */
 Grid Grid::crop(int x0, int y0, int x1, int y1) const {
-    x0--;
-    y0--;
-    x1--;
-    y1--;
-    if (x0 < 0 || x1 > _width || y0 < 0 || y1 > _height || x1 - x0 <= 0 || y1 - y0 <= 0) {
+    if (x0 < 0 || x1 > _width || y0 < 0 || y1 > _height || x1 - x0 < 0 || y1 - y0 < 0) {
         throw std::exception();
     }
 
     Grid newGrid = Grid(x1 - x0, y1 - y0);
     for (int y = y0; y < y1; y++) {
         for (int x = x0; x < x1; x++) {
-            newGrid.set(x, y, cells[get_index(x, y)]);
+            newGrid.set(x - x0, y - y0, get(x, y));
         }
     }
+
+    return newGrid;
 }
 
 /**
@@ -561,7 +562,9 @@ Grid Grid::crop(int x0, int y0, int x1, int y1) const {
  * @throws
  *      std::exception or sub-class if the other grid being placed does not fit within the bounds of the current grid.
  */
+void Grid::merge(Grid other, int x0, int y0, bool alive_only) {
 
+}
 
 /**
  * Grid::rotate(rotation)
