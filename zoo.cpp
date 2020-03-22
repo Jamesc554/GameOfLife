@@ -21,6 +21,7 @@
  * @author 962940
  * @date March, 2020
  */
+#include <fstream>
 #include "zoo.h"
 
 // Include the minimal number of headers needed to support your implementation.
@@ -46,7 +47,16 @@
  * @return
  *      Returns a Grid containing a glider.
  */
+Grid Zoo::glider() {
+    Grid grid(3);
+    grid.set(1, 0, ALIVE);
+    grid.set(2, 1, ALIVE);
+    grid.set(3, 0, ALIVE);
+    grid.set(3, 1, ALIVE);
+    grid.set(3, 2, ALIVE);
 
+    return grid;
+}
 
 /**
  * Zoo::r_pentomino()
@@ -68,7 +78,16 @@
  * @return
  *      Returns a Grid containing a r-pentomino.
  */
+Grid Zoo::r_pentomino() {
+    Grid grid(3);
+    grid.set(1, 0, ALIVE);
+    grid.set(2, 0, ALIVE);
+    grid.set(0, 1, ALIVE);
+    grid.set(1, 1, ALIVE);
+    grid.set(1, 2, ALIVE);
 
+    return grid;
+}
 
 /**
  * Zoo::light_weight_spaceship()
@@ -91,7 +110,20 @@
  * @return
  *      Returns a grid containing a light weight spaceship.
  */
+Grid Zoo::light_weight_spaceship() {
+    Grid grid(5, 4);
+    grid.set(1, 0, ALIVE);
+    grid.set(4, 0, ALIVE);
+    grid.set(0, 1, ALIVE);
+    grid.set(0, 2, ALIVE);
+    grid.set(4, 2, ALIVE);
+    grid.set(3, 0, ALIVE);
+    grid.set(3, 1, ALIVE);
+    grid.set(3, 2, ALIVE);
+    grid.set(3, 3, ALIVE);
 
+    return grid;
+}
 
 /**
  * Zoo::load_ascii(path)
@@ -117,7 +149,6 @@
  *          - Newline characters are not found when expected during parsing.
  *          - The character for a cell is not the ALIVE or DEAD character.
  */
-
 
 /**
  * Zoo::save_ascii(path, grid)

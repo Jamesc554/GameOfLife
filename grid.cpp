@@ -347,13 +347,7 @@ int Grid::get_index(int x, int y) const {
  */
 
 Cell Grid::get(int x, int y) const {
-    try {
-        return operator()(x, y);
-    } catch (std::exception &e) {
-        std::cerr << "Something went wrong!" << std::endl;
-    }
-
-    return DEAD;
+    return operator()(x, y);
 }
 
 /**
@@ -383,12 +377,8 @@ Cell Grid::get(int x, int y) const {
  *      std::exception or sub-class if x,y is not a valid coordinate within the grid.
  */
 void Grid::set(int x, int y, Cell value) {
-    try {
-        Cell &cell = Grid::operator()(x, y);
-        cell = value;
-    } catch (std::exception &e) {
-        std::cerr << "Grid::set::Something went wrong!" << std::endl;
-    }
+    Cell &cell = Grid::operator()(x, y);
+    cell = value;
 }
 
 /**
@@ -561,7 +551,7 @@ Grid Grid::crop(int x0, int y0, int x1, int y1) const {
  */
 void Grid::merge(Grid other, int x0, int y0, bool alive_only) {
     // Check if other grid will fit onto current grid, with given coordinates
-    if (!valid_coordinate(x0, y0) || !valid_coordinate(x0 + other.get_width(), y0 + other.get_height())) {
+    if (!valid_coordinate(x0, y0) || !valid_coordinate(x0 + other.get_width() - 1, y0 + other.get_height() - 1)) {
         throw std::exception();
     }
 
