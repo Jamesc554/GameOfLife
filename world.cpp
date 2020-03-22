@@ -37,7 +37,7 @@
  *      World world;
  *
  */
-
+World::World() : World(0) {}
 
 /**
  * World::World(square_size)
@@ -58,7 +58,7 @@
  * @param square_size
  *      The edge size to use for the width and height of the world.
  */
-
+World::World(int square_size) : World(square_size, square_size) {}
 
 /**
  * World::World(width, height)
@@ -75,7 +75,7 @@
  * @param height
  *      The height of the world.
  */
-
+World::World(int width, int height) : World(Grid(width, height)) {}
 
 /**
  * World::World(initial_state)
@@ -96,7 +96,9 @@
  * @param initial_state
  *      The state of the constructed world.
  */
-
+World::World(Grid grid) {
+    _current_state = grid;
+}
 
 /**
  * World::get_width()
@@ -121,7 +123,9 @@
  * @return
  *      The width of the world.
  */
-
+int World::get_width() const {
+    return _current_state.get_width();
+}
 
 /**
  * World::get_height()
@@ -146,7 +150,9 @@
  * @return
  *      The height of the world.
  */
-
+int World::get_height() const {
+    return _current_state.get_height();
+}
 
 /**
  * World::get_total_cells()
@@ -171,7 +177,9 @@
  * @return
  *      The number of total cells.
  */
-
+int World::get_total_cells() const {
+    return _current_state.get_total_cells();
+}
 
 /**
  * World::get_alive_cells()
@@ -196,7 +204,9 @@
  * @return
  *      The number of alive cells.
  */
-
+int World::get_alive_cells() const {
+    return _current_state.get_alive_cells();
+}
 
 /**
  * World::get_dead_cells()
@@ -221,7 +231,9 @@
  * @return
  *      The number of dead cells.
  */
-
+int World::get_dead_cells() const {
+    return _current_state.get_dead_cells();
+}
 
 /**
  * World::get_state()
@@ -247,7 +259,9 @@
  * @return
  *      A reference to the current state.
  */
-
+const Grid World::get_state() const {
+    return _current_state;
+}
 
 /**
  * World::resize(square_size)
@@ -268,7 +282,9 @@
  * @param square_size
  *      The new edge size for both the width and height of the grid.
  */
-
+void World::resize(int square_size) {
+    resize(square_size, square_size);
+}
 
 /**
  * World::resize(new_width, new_height)
@@ -292,7 +308,9 @@
  * @param new_height
  *      The new height for the grid.
  */
-
+void World::resize(int new_width, int new_height) {
+    _current_state.resize(new_width, new_height);
+}
 
 /**
  * World::count_neighbours(x, y, toroidal)
@@ -325,7 +343,30 @@
  * @return
  *      Returns the number of alive neighbours.
  */
+int World::count_neighbours(int x, int y, bool toroidal) {
+    int count = 0;
+    if (!_current_state.valid_coordinate(x, y)) return count;
 
+    for (int yy = -1; yy <= 1; yy++) {
+        for (int xx = -1; xx <= 1; xx++) {
+            if (xx == 0 && yy == 0) continue;
+
+            int newX = x + xx;
+            int newY = y + yy;
+
+            if (toroidal) {
+                newX %= get_width() - 1;
+                newY %= get_height() - 1;
+            }
+
+            if (_current_state.valid_coordinate(newX, newY)) {
+                count += _current_state.get(newX, newY) == ALIVE ? 1 : 0;
+            }
+        }
+    }
+
+    return count;
+}
 
 /**
  * World::step(toroidal)
@@ -347,7 +388,29 @@
  *      Optional parameter. If true then the step will consider the grid as a torus, where the left edge
  *      wraps to the right edge and the top to the bottom. Defaults to false.
  */
+void World::step(bool toroidal) {
+    _next_state = Grid(get_width(), get_height());
+    for (int y = 0; y < get_height(); y++) {
+        for (int x = 0; x < get_width(); x++) {
+            int neighbours = count_neighbours(x, y, toroidal);
+            bool alive = _current_state.get(x, y) == ALIVE;
 
+            if (alive) {
+                if (neighbours == 2 || neighbours == 3) {
+                    _next_state.set(x, y, ALIVE);
+                    continue;
+                }
+            } else if (neighbours == 3) {
+                _next_state.set(x, y, ALIVE);
+                continue;
+            }
+
+            _next_state.set(x, y, DEAD);
+        }
+    }
+
+    std::swap(_current_state, _next_state);
+}
 
 /**
  * World::advance(steps, toroidal)
@@ -362,3 +425,8 @@
  *      Optional parameter. If true then the step will consider the grid as a torus, where the left edge
  *      wraps to the right edge and the top to the bottom. Defaults to false.
  */
+void World::advance(int steps, bool toroidal) {
+    for (int i = 0; i < steps; i++) {
+        step(toroidal);
+    }
+}
