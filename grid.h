@@ -13,6 +13,8 @@
 // Add the minimal number of includes you need in order to declare the class.
 // #include ...
 #include <vector>
+#include <cmath>
+#include <iostream>
 
 /**
  * A Cell is a char limited to two named values for Cell::DEAD and Cell::ALIVE.
@@ -51,7 +53,7 @@ public:
 
     void resize(int square_size);
 
-    void resize(int width, int height);
+    void resize(int new_width, int new_height);
 
     Cell get(int x, int y) const;
 
@@ -65,7 +67,12 @@ public:
 
     void merge(Grid other, int x0, int y0, bool alive_only = false);
 
+    Grid rotate(int rotation) const;
+
+    friend std::ostream &operator<<(std::ostream &output_stream, const Grid &grid);
     // How to draw an owl:
     //      Step 1. Draw a circle.
     //      Step 2. Draw the rest of the owl.
+
+    bool valid_coordinate(int x, int y) const;
 };

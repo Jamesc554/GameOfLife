@@ -11,7 +11,6 @@
  * @author 962940
  * @date March, 2020
  */
-#include <iostream>
 #include "grid.h"
 
 // Include the minimal number of headers needed to support your implementation.
@@ -280,23 +279,21 @@ void Grid::resize(int square_size) {
  *      The new height for the grid.
  */
 
-void Grid::resize(int width, int height) {
-    Cell *newCells;
-    int newWidth = width;
-    int newHeight = height;
-
-    newCells = new Cell[width * height];
-    for (int x = 0; x < newWidth; x++) {
-        for (int y = 0; y < newHeight; y++) {
-            newCells[x + newWidth * y] = Cell::DEAD;
-            if (x < _width && y < _height)
-                newCells[x + newWidth * y] = get(x, y);
+void Grid::resize(int new_width, int new_height) {
+    Cell *newCells = new Cell[new_width * new_height]; // Create a new Cell array with the new width and height.
+    for (int x = 0; x < new_width; x++) { // Loop through the width.
+        for (int y = 0; y < new_height; y++) { // Loop through the height.
+            if (x < _width && y < _height) // If the coordinate is within the old array, copy it over to the new array.
+                newCells[x + new_width * y] = get(x, y);
+            else
+                newCells[x + new_width * y] = Cell::DEAD;
         }
     }
 
+    // Assign the new variables to the object.
     cells = newCells;
-    _width = newWidth;
-    _height = newHeight;
+    _width = new_width;
+    _height = new_height;
 }
 
 /**
@@ -430,7 +427,7 @@ void Grid::set(int x, int y, Cell value) {
  *      std::runtime_error or sub-class if x,y is not a valid coordinate within the grid.
  */
 Cell &Grid::operator()(int x, int y) {
-    if (x < 0 || x >= _width || y < 0 || y >= _height) {
+    if (!valid_coordinate(x, y)) {
         throw std::exception();
     } else {
         return cells[get_index(x, y)];
@@ -468,7 +465,7 @@ Cell &Grid::operator()(int x, int y) {
  *      std::exception or sub-class if x,y is not a valid coordinate within the grid.
  */
 Cell &Grid::operator()(int x, int y) const {
-    if (x < 0 || x >= _width || y < 0 || y >= _height) {
+    if (!valid_coordinate(x, y)) {
         throw std::exception();
     } else {
         Cell &cell = cells[get_index(x, y)];
@@ -563,7 +560,20 @@ Grid Grid::crop(int x0, int y0, int x1, int y1) const {
  *      std::exception or sub-class if the other grid being placed does not fit within the bounds of the current grid.
  */
 void Grid::merge(Grid other, int x0, int y0, bool alive_only) {
+    // Check if other grid will fit onto current grid, with given coordinates
+    if (!valid_coordinate(x0, y0) || !valid_coordinate(x0 + other.get_width(), y0 + other.get_height())) {
+        throw std::exception();
+    }
 
+    // If we are only merging alive cells, check if other has any alive cells
+    if (alive_only && other.get_alive_cells() <= 0) return;
+
+    for (int y = 0, yy = y0; y < other.get_height(); y++, yy++) {
+        for (int x = 0, xx = x0; x < other.get_width(); x++, xx++) {
+            !alive_only ? set(xx, yy, other.get(x, y)) : other.get(x, y) == ALIVE ? set(xx, yy, other.get(x, y)) : set(
+                    xx, yy, get(xx, yy));
+        }
+    }
 }
 
 /**
@@ -588,7 +598,45 @@ void Grid::merge(Grid other, int x0, int y0, bool alive_only) {
  * @return
  *      Returns a copy of the grid that has been rotated.
  */
+Grid Grid::rotate(int rotation) const {
+    int rotationTimes = abs(rotation % 4 + 4) % 4;
 
+    // Create a new grid, with the width and height changed based on the rotation wanted
+    Grid newGrid = Grid(rotationTimes % 2 == 0 ? get_width() : get_height(),
+                        rotationTimes % 2 == 0 ? get_height() : get_width());
+    // Loop through every index in the new grid
+    for (int y = 0; y < newGrid.get_height(); y++) {
+        for (int x = 0; x < newGrid.get_width(); x++) {
+            int newX = x;
+            int newY = y;
+            // Calculate where it should get its value from
+            switch (rotationTimes) {
+                case 0:
+                    newX = x;
+                    newY = y;
+                    break;
+                case 1:
+                    newX = y;
+                    newY = get_height() - x - 1;
+                    break;
+                case 2:
+                    newX = get_width() - x - 1;
+                    newY = get_height() - y - 1;
+                    break;
+                case 3:
+                    newX = get_width() - y - 1;
+                    newY = x;
+                    break;
+                default:
+                    break;
+            }
+            // Set the new value in the rotated grid
+            newGrid.set(x, y, get(newX, newY));
+        }
+    }
+
+    return newGrid;
+}
 
 /**
  * operator<<(output_stream, grid)
@@ -625,4 +673,48 @@ void Grid::merge(Grid other, int x0, int y0, bool alive_only) {
  * @return
  *      Returns a reference to the output stream to enable operator chaining.
  */
+std::ostream &operator<<(std::ostream &output_stream, const Grid &grid) {
+    for (int y = -1; y <= grid.get_height(); y++) {
+        for (int x = -1; x <= grid.get_width(); x++) {
+            char character = ' ';
+            if (x == -1 || x == grid.get_width()) {
+                if (y == -1 || y == grid.get_height()) {
+                    character = '+';
+                } else {
+                    character = '|';
+                }
+            } else if (y == -1 || y == grid.get_height()) {
+                character = '-';
+            } else {
+                character = grid.get(x, y) == ALIVE ? '#' : ' ';
+            }
+            output_stream << character;
+        }
+        output_stream << std::endl;
+    }
+
+    return output_stream;
+}
+
+/**
+ * Grid::valid_coordinate(x, y)
+ *
+ * Helper function to determine if the 2d coordinate is valid in the grid.
+ * Should not be visible from outside the Grid class.
+ * The function should be callable from a constant context.
+ *
+ * @param x
+ *      The x coordinate of the cell.
+ *
+ * @param y
+ *      The y coordinate of the cell.
+ *
+ * @return
+ *      true if valid, false if not.
+ */
+bool Grid::valid_coordinate(int x, int y) const {
+    return !(x < 0 || y < 0 || x >= _width || y >= _height);
+}
+
+
 
