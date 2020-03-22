@@ -676,7 +676,7 @@ Grid Grid::rotate(int rotation) const {
 std::ostream &operator<<(std::ostream &output_stream, const Grid &grid) {
     for (int y = -1; y <= grid.get_height(); y++) {
         for (int x = -1; x <= grid.get_width(); x++) {
-            char character = ' ';
+            char character;
             if (x == -1 || x == grid.get_width()) {
                 if (y == -1 || y == grid.get_height()) {
                     character = '+';
