@@ -355,8 +355,8 @@ int World::count_neighbours(int x, int y, bool toroidal) {
             int newY = y + yy;
 
             if (toroidal) {
-                newX %= get_width() - 1;
-                newY %= get_height() - 1;
+                newX = (newX % get_width() + get_width()) % get_width();
+                newY = (newY % get_height() + get_height()) % get_height();
             }
 
             if (_current_state.valid_coordinate(newX, newY)) {
