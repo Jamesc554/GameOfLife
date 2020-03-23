@@ -1,0 +1,6 @@
+#ignore all files
+*
+#except .cpp .h and README
+!*.cpp
+!*.h
+!README
