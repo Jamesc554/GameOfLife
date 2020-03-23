@@ -79,11 +79,7 @@ Grid::Grid(int width, int height) {
     _width = width;
     _height = height;
 
-    //cells = new Cell[width * height];
-    cells = new Cell[width * height];
-    for (int i = 0; i < width * height; i++) {
-        cells[i] = DEAD;
-    }
+    cells.resize(width * height, Cell::DEAD);
 
     std::cout << "Created a new grid with size width: " << width << " - height: " << height << std::endl;
 }
@@ -280,7 +276,7 @@ void Grid::resize(int square_size) {
  */
 
 void Grid::resize(int new_width, int new_height) {
-    Cell *newCells = new Cell[new_width * new_height]; // Create a new Cell array with the new width and height.
+    std::vector<Cell> newCells(new_width * new_height); // Create a new Cell array with the new width and height.
     for (int x = 0; x < new_width; x++) { // Loop through the width.
         for (int y = 0; y < new_height; y++) { // Loop through the height.
             if (x < _width && y < _height) // If the coordinate is within the old array, copy it over to the new array.
@@ -454,12 +450,11 @@ Cell &Grid::operator()(int x, int y) {
  * @throws
  *      std::exception or sub-class if x,y is not a valid coordinate within the grid.
  */
-Cell &Grid::operator()(int x, int y) const {
+const Cell &Grid::operator()(int x, int y) const {
     if (!valid_coordinate(x, y)) {
         throw std::exception();
     } else {
-        Cell &cell = cells[get_index(x, y)];
-        return cell;
+        return cells.at(get_index(x, y));
     }
 }
 

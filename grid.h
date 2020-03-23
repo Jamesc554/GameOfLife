@@ -29,7 +29,7 @@ enum Cell : char {
  */
 class Grid {
 private:
-    Cell *cells;
+    std::vector<Cell> cells;
     int _width, _height;
 
     int get_index(int x, int y) const;
@@ -61,7 +61,7 @@ public:
 
     Cell &operator()(int x, int y);
 
-    Cell &operator()(int x, int y) const;
+    const Cell &operator()(int x, int y) const;
 
     Grid crop(int x0, int y0, int x1, int y1) const;
 

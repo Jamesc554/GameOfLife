@@ -22,6 +22,7 @@
  * @date March, 2020
  */
 #include <fstream>
+#include <sstream>
 #include "zoo.h"
 
 // Include the minimal number of headers needed to support your implementation.
@@ -149,6 +150,58 @@ Grid Zoo::light_weight_spaceship() {
  *          - Newline characters are not found when expected during parsing.
  *          - The character for a cell is not the ALIVE or DEAD character.
  */
+Grid Zoo::load_ascii(std::string filePath) {
+    std::ifstream file;
+    file.open(filePath);
+    Grid newGrid;
+
+    if (!file) {
+        throw std::runtime_error("File failed to open");
+    }
+
+    if (file.is_open()) {
+        std::string line;
+        int width = 0, height = 0;
+        int lineIndex = 0;
+        while ((getline(file, line), !line.empty())) {
+            int characterIndex = 0;
+            if (lineIndex == 0) {
+                std::string temp;
+                std::stringstream ss(line);
+                while (getline(ss, temp, ' ')) {
+                    if (characterIndex == 0)
+                        width = std::stoi(temp);
+                    else
+                        height = std::stoi(temp);
+
+                    characterIndex++;
+                }
+
+                if (width < 0 || height < 0) {
+                    throw std::runtime_error("Width or Height is a negative number");
+                }
+                newGrid = Grid(width, height);
+                std::cout << "Width: " << width << " Height: " << height;
+            } else {
+                for (int i = 0; i < line.length(); i++) {
+                    if (i >= width)
+                        throw std::runtime_error(&"There is a missing new line character on line: "[lineIndex]);
+
+                    std::cout << line[i] << std::endl;
+                    if (line[i] == '#')
+                        newGrid.set(i, lineIndex - 1, ALIVE);
+                    else if (line[i] != ' ') {
+                        throw std::runtime_error("File contains invalid string");
+                    }
+                }
+            }
+            lineIndex++;
+        }
+        file.close();
+    }
+
+    return newGrid;
+}
 
 /**
  * Zoo::save_ascii(path, grid)
