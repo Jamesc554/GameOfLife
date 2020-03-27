@@ -681,6 +681,18 @@ std::ostream &operator<<(std::ostream &output_stream, const Grid &grid) {
     return output_stream;
 }
 
+std::string Grid::to_string() const {
+    std::stringstream ss;
+    for (int y = 0; y < get_height(); y++) {
+        for (int x = 0; x < get_width(); x++) {
+            ss << (get(x, y) == ALIVE ? '#' : ' ');
+        }
+        ss << std::endl;
+    }
+
+    return ss.str();
+}
+
 /**
  * Grid::valid_coordinate(x, y)
  *

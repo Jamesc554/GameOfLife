@@ -15,6 +15,7 @@
 #include <vector>
 #include <cmath>
 #include <iostream>
+#include <sstream>
 
 /**
  * A Cell is a char limited to two named values for Cell::DEAD and Cell::ALIVE.
@@ -70,6 +71,7 @@ public:
     Grid rotate(int rotation) const;
 
     friend std::ostream &operator<<(std::ostream &output_stream, const Grid &grid);
+    std::string to_string() const;
     // How to draw an owl:
     //      Step 1. Draw a circle.
     //      Step 2. Draw the rest of the owl.
