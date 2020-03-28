@@ -79,9 +79,7 @@ Grid::Grid(int width, int height) {
     _width = width;
     _height = height;
 
-    cells.resize(width * height, Cell::DEAD);
-
-    std::cout << "Created a new grid with size width: " << width << " - height: " << height << std::endl;
+    cells = std::vector(width * height, Cell::DEAD);
 }
 
 /**

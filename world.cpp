@@ -345,25 +345,11 @@ void World::resize(int new_width, int new_height) {
  */
 int World::count_neighbours(int x, int y, bool toroidal) {
     int count = 0;
-    if (!_current_state.valid_coordinate(x, y)) return count;
 
-    for (int yy = -1; yy <= 1; yy++) {
-        for (int xx = -1; xx <= 1; xx++) {
-            if (xx == 0 && yy == 0) continue;
-
-            int newX = x + xx;
-            int newY = y + yy;
-
-            if (toroidal) {
-                newX = (newX % get_width() + get_width()) % get_width();
-                newY = (newY % get_height() + get_height()) % get_height();
-            }
-
-            if (_current_state.valid_coordinate(newX, newY)) {
-                count += _current_state.get(newX, newY) == ALIVE ? 1 : 0;
-            }
-        }
-    }
+    for (int yy = -1; yy <= 1; yy++)
+        for (int xx = -1, newX = (toroidal ? (x + xx % get_width() + get_width()) % get_width() : x + xx), newY = (toroidal ? (y + yy % get_height() + get_height()) % get_height() : y + yy);
+        xx <= 1;
+        count += get_state().valid_coordinate(newX, newY) ? get_state().get(newX, newY) == ALIVE ? 1 : 0 : 0, yy == 0 ? xx += 2 : xx++, newX = (toroidal ? (x + xx % get_width() + get_width()) % get_width() : x + xx)){}
 
     return count;
 }

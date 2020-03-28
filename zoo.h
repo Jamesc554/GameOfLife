@@ -24,9 +24,9 @@ namespace Zoo {
 
     Grid light_weight_spaceship();
 
-    Grid load_ascii(std::string filePath);
+    Grid load_ascii(const std::string& filePath);
 
-    void save_ascii(std::string filePath, Grid grid);
+    void save_ascii(const std::string& filePath, const Grid& grid);
 
     Grid load_binary(std::string filePath);
 

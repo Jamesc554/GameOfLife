@@ -150,59 +150,82 @@ Grid Zoo::light_weight_spaceship() {
  *          - Newline characters are not found when expected during parsing.
  *          - The character for a cell is not the ALIVE or DEAD character.
  */
-Grid Zoo::load_ascii(std::string filePath) {
+Grid Zoo::load_ascii(const std::string& filePath) {
+    // First open the file
     std::ifstream file;
     file.open(filePath);
     Grid newGrid;
 
+    // Then we need to check if the file failed to open
     if (!file) {
         throw std::runtime_error("File failed to open");
     }
 
+    // Once we know the file is open
     if (file.is_open()) {
-        std::string line;
         int width = 0, height = 0;
-        int lineIndex = 0;
+
+        // First thing to do is get the width and height values from the top line
+        std::string topLine;
+        std::string temp;
+        getline(file, topLine);
+        std::stringstream ss(topLine);
+        while (getline(ss, temp, ' ')) {
+            // Check if the width has been set, if it has then set the height
+            if (width == 0)
+                width = stoi(temp);
+            else
+                height = stoi(temp);
+        }
+
+        // Once we have set the width and height, we need to check to make sure the values are valid. e.g. > 0
+        if (width <= 0 || height <= 0) {
+            file.close();
+            throw std::runtime_error("Width or Height have an invalid value, make sure they are both greater than 0");
+        }
+
+        newGrid = Grid(width, height);
+        std::string line;
+        int lineIndex = 0; // lineIndex is the Y-value for the grid we're reading
+        // Next, Loop over each line
         while ((getline(file, line))) {
-            int characterIndex = 0;
-            if (lineIndex == 0) {
-                std::string temp;
-                std::stringstream ss(line);
-                while (getline(ss, temp, ' ')) {
-                    if (characterIndex == 0)
-                        width = std::stoi(temp);
-                    else
-                        height = std::stoi(temp);
+            // Check if the line is longer than expected
+            if (line.length() > width) {
+                file.close();
+                throw std::runtime_error("The line at " + std::to_string(lineIndex) + " was longer than expected");
+            }
 
-                    characterIndex++;
-                }
-
-                if (width < 0 || height < 0) {
-                    throw std::runtime_error("Width or Height is a negative number");
-                }
-                newGrid = Grid(width, height);
-                std::cout << "Width: " << width << " Height: " << height;
-            } else {
-                for (int i = 0; i < line.length(); i++) {
-                    if (i >= width)
-                        throw std::runtime_error(&"There is a missing new line character on line: "[lineIndex]);
-
-                    std::cout << line[i] << std::endl;
-                    if (line[i] == '#')
-                        newGrid.set(i, lineIndex - 1, ALIVE);
-                    else if (line[i] != ' ') {
-                        throw std::runtime_error("File contains invalid string");
+            if (line.length() > 0) {
+                // Loop over each character in the line
+                for (int c = 0; c < line.length(); c++) {
+                    char sym = line[c];
+                    switch (sym) {
+                        case '#':
+                            // The Cell is alive
+                            newGrid.set(c, lineIndex, ALIVE);
+                            break;
+                        case ' ':
+                            // The Cell is dead
+                            newGrid.set(c, lineIndex, DEAD);
+                            break;
+                        default:
+                            // The symbol is an invalid value
+                            file.close();
+                            throw std::runtime_error("There was an invalid symbol found");
                     }
                 }
             }
             lineIndex++;
         }
 
-        if (lineIndex - 1 < height) {
+
+        if (lineIndex + 1 < height) {
             throw std::runtime_error("File ends unexpectedly");
         }
 
         file.close();
+    } else {
+        throw std::runtime_error("File failed to open");
     }
 
     return newGrid;
@@ -236,8 +259,12 @@ Grid Zoo::load_ascii(std::string filePath) {
  * @throws
  *      Throws std::runtime_error or sub-class if the file cannot be opened.
  */
-void Zoo::save_ascii(std::string filePath, Grid grid) {
+void Zoo::save_ascii(const std::string& filePath, const Grid& grid) {
     std::ofstream saveFile(filePath);
+
+    if (!saveFile) {
+        throw std::runtime_error("File cannot be opened");
+    }
 
     saveFile << grid.get_width() << " " << grid.get_height() << std::endl;
     saveFile << grid.to_string();
