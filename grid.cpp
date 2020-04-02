@@ -453,7 +453,7 @@ const Cell &Grid::operator()(int x, int y) const {
     if (!valid_coordinate(x, y)) {
         throw std::runtime_error("Invalid Coordinate");
     } else {
-        return cells.at(get_index(x, y));
+        return cells[get_index(x, y)];
     }
 }
 
@@ -597,7 +597,7 @@ Grid Grid::rotate(int rotation) const {
         for (int x = 0; x < newGrid.get_width(); x++) {
             int newX = x;
             int newY = y;
-            // Calculate where it should get its value from
+            // Calculate where it should get its value from: 0 - 0 Degrees, 1 - 90, 2 - 180, 3 - 270
             switch (rotationTimes) {
                 case 0:
                     newX = x;
