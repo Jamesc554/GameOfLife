@@ -52,9 +52,9 @@ Grid Zoo::glider() {
     Grid grid(3);
     grid.set(1, 0, ALIVE);
     grid.set(2, 1, ALIVE);
-    grid.set(3, 0, ALIVE);
-    grid.set(3, 1, ALIVE);
-    grid.set(3, 2, ALIVE);
+    grid.set(0, 2, ALIVE);
+    grid.set(1, 2, ALIVE);
+    grid.set(2, 2, ALIVE);
 
     return grid;
 }
@@ -118,9 +118,9 @@ Grid Zoo::light_weight_spaceship() {
     grid.set(0, 1, ALIVE);
     grid.set(0, 2, ALIVE);
     grid.set(4, 2, ALIVE);
-    grid.set(3, 0, ALIVE);
-    grid.set(3, 1, ALIVE);
-    grid.set(3, 2, ALIVE);
+    grid.set(0, 3, ALIVE);
+    grid.set(1, 3, ALIVE);
+    grid.set(2, 3, ALIVE);
     grid.set(3, 3, ALIVE);
 
     return grid;
@@ -167,16 +167,14 @@ Grid Zoo::load_ascii(const std::string& filePath) {
 
         // First thing to do is get the width and height values from the top line
         std::string topLine;
-        std::string temp;
         getline(file, topLine);
         std::stringstream ss(topLine);
-        while (getline(ss, temp, ' ')) {
-            // Check if the width has been set, if it has then set the height
-            if (width == 0)
-                width = stoi(temp);
-            else
-                height = stoi(temp);
-        }
+
+        getline(ss, topLine, ' ');
+        width = stoi(topLine);
+
+        getline(ss, topLine, ' ');
+        height = stoi(topLine);
 
         // Once we have set the width and height, we need to check to make sure the values are valid. e.g. > 0
         if (width <= 0 || height <= 0) {
@@ -190,14 +188,14 @@ Grid Zoo::load_ascii(const std::string& filePath) {
         // Next, Loop over each line
         while ((getline(file, line))) {
             // Check if the line is longer than expected
-            if (line.length() > width) {
+            if ((int)line.length() > width) {
                 file.close();
                 throw std::runtime_error("The line at " + std::to_string(lineIndex) + " was longer than expected");
             }
 
             if (line.length() > 0) {
                 // Loop over each character in the line
-                for (int c = 0; c < line.length(); c++) {
+                for (int c = 0; c < (int)line.length(); c++) {
                     char sym = line[c];
                     switch (sym) {
                         case '#':
@@ -217,12 +215,9 @@ Grid Zoo::load_ascii(const std::string& filePath) {
             }
             lineIndex++;
         }
-
-
         if (lineIndex + 1 < height) {
             throw std::runtime_error("File ends unexpectedly");
         }
-
         file.close();
     } else {
         throw std::runtime_error("File failed to open");
@@ -294,7 +289,51 @@ void Zoo::save_ascii(const std::string& filePath, const Grid& grid) {
  *          - The file cannot be opened.
  *          - The file ends unexpectedly.
  */
+Grid Zoo::load_binary(const std::string &filePath) {
+    Grid newGrid;
+    std::ifstream file(filePath, std::ios::in | std::ios::binary);
 
+    if (!file) {
+        throw std::runtime_error("File failed to open");
+    }
+
+    int width = 0;
+    int height = 0;
+
+    file.read(reinterpret_cast<char *>(&width), sizeof(width));
+    file.read(reinterpret_cast<char *>(&height), sizeof(height));
+
+    newGrid = Grid(width, height);
+
+    for (int y = 0; y < height; y++) {
+        char line;
+
+        if (file.get(line)) {
+            for (int x = 0; x < 8; x++) {
+                int cell = ((line >> x) & 1);
+
+                int index = x + 8 * y;
+
+                if (index >= width * height) {
+                    y = height;
+                    break;
+                }
+
+                int xCoord = index % width;
+                int yCoord = index / width;
+
+                newGrid.set(xCoord, yCoord, cell == 1 ? ALIVE : DEAD);
+            }
+        } else {
+            file.close();
+            throw std::runtime_error("File ends wrong boi");
+        }
+    }
+
+    file.close();
+
+    return newGrid;
+}
 
 /**
  * Zoo::save_binary(path, grid)
@@ -324,4 +363,41 @@ void Zoo::save_ascii(const std::string& filePath, const Grid& grid) {
  * @throws
  *      Throws std::runtime_error or sub-class if the file cannot be opened.
  */
+void Zoo::save_binary(const std::string &filePath, const Grid &grid) {
+    std::ofstream saveFile(filePath, std::ios::out | std::ios::binary);
 
+    if (!saveFile)
+        throw std::runtime_error("Invalid save directory");
+
+    int width = grid.get_width();
+    int height = grid.get_height();
+
+    saveFile.write(reinterpret_cast<const char *>(&width), 4);
+    saveFile.write(reinterpret_cast<const char *>(&height), 4);
+
+    unsigned char line = 0;
+    int size = grid.get_width() * grid.get_height();
+    int x = 0;
+    for (int i = 0; i < grid.get_height() * grid.get_width(); i++) {
+        if (i < size) {
+            int currentBit = grid.get(i % grid.get_width(), i / grid.get_width()) == ALIVE ? 1 : 0;
+            if (currentBit) {
+                line |= (1 << x);
+            }
+        }
+
+        x++;
+        if (x == 8) {
+            x = 0;
+            saveFile << (line);
+            line = 0;
+        }
+    }
+
+    if (x != 0) {
+        saveFile << (line);
+        x = 0;
+    }
+
+    saveFile.close();
+}

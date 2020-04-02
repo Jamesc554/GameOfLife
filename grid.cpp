@@ -79,7 +79,7 @@ Grid::Grid(int width, int height) {
     _width = width;
     _height = height;
 
-    cells = std::vector(width * height, Cell::DEAD);
+    cells = std::vector<Cell>(width * height, Cell::DEAD);
 }
 
 /**
