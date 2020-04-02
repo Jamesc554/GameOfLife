@@ -297,6 +297,7 @@ Grid Zoo::load_binary(const std::string &filePath) {
         throw std::runtime_error("File failed to open");
     }
 
+    // Read in width and height
     int width = 0;
     int height = 0;
 
@@ -305,13 +306,17 @@ Grid Zoo::load_binary(const std::string &filePath) {
 
     newGrid = Grid(width, height);
 
+    // Loop over each line in the file
     for (int y = 0; y < height; y++) {
         char line;
 
+        // If we can get a new line
         if (file.get(line)) {
+            // Read in each bit of each byte
             for (int x = 0; x < 8; x++) {
                 int cell = ((line >> x) & 1);
 
+                // Convert the padded index to the index of the grid
                 int index = x + 8 * y;
 
                 if (index >= width * height) {
@@ -325,8 +330,9 @@ Grid Zoo::load_binary(const std::string &filePath) {
                 newGrid.set(xCoord, yCoord, cell == 1 ? ALIVE : DEAD);
             }
         } else {
+            // If the file ends before it's meant to
             file.close();
-            throw std::runtime_error("File ends wrong boi");
+            throw std::runtime_error("File ends wrong");
         }
     }
 
@@ -369,6 +375,7 @@ void Zoo::save_binary(const std::string &filePath, const Grid &grid) {
     if (!saveFile)
         throw std::runtime_error("Invalid save directory");
 
+    // Save width and height to the file
     int width = grid.get_width();
     int height = grid.get_height();
 
@@ -378,7 +385,8 @@ void Zoo::save_binary(const std::string &filePath, const Grid &grid) {
     unsigned char line = 0;
     int size = grid.get_width() * grid.get_height();
     int x = 0;
-    for (int i = 0; i < grid.get_height() * grid.get_width(); i++) {
+    // Loop over each cell and write it to the byte
+    for (int i = 0; i < size; i++) {
         if (i < size) {
             int currentBit = grid.get(i % grid.get_width(), i / grid.get_width()) == ALIVE ? 1 : 0;
             if (currentBit) {
@@ -387,6 +395,7 @@ void Zoo::save_binary(const std::string &filePath, const Grid &grid) {
         }
 
         x++;
+        // Once the byte is complete, write it to the file
         if (x == 8) {
             x = 0;
             saveFile << (line);
@@ -394,9 +403,9 @@ void Zoo::save_binary(const std::string &filePath, const Grid &grid) {
         }
     }
 
+    // If the byte was incomplete before ending, finish writing to the file
     if (x != 0) {
         saveFile << (line);
-        x = 0;
     }
 
     saveFile.close();

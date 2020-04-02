@@ -23,6 +23,8 @@
  */
 #include "world.h"
 
+#include <utility>
+
 // Include the minimal number of headers needed to support your implementation.
 // #include ...
 
@@ -97,7 +99,7 @@ World::World(int width, int height) : World(Grid(width, height)) {}
  *      The state of the constructed world.
  */
 World::World(Grid grid) {
-    _current_state = grid;
+    _current_state = std::move(grid);
 }
 
 /**
@@ -259,7 +261,7 @@ int World::get_dead_cells() const {
  * @return
  *      A reference to the current state.
  */
-const Grid World::get_state() const {
+const Grid& World::get_state() const {
     return _current_state;
 }
 
@@ -375,26 +377,33 @@ int World::count_neighbours(int x, int y, bool toroidal) {
  *      wraps to the right edge and the top to the bottom. Defaults to false.
  */
 void World::step(bool toroidal) {
+    // Create new grid
     _next_state = Grid(get_width(), get_height());
     for (int y = 0; y < get_height(); y++) {
         for (int x = 0; x < get_width(); x++) {
+            // Get neighbour count
             int neighbours = count_neighbours(x, y, toroidal);
             bool alive = _current_state.get(x, y) == ALIVE;
 
+            // If the current cell is alive
             if (alive) {
+                // Check if it should still be alive
                 if (neighbours == 2 || neighbours == 3) {
                     _next_state.set(x, y, ALIVE);
                     continue;
                 }
             } else if (neighbours == 3) {
+                // If it's dead and should be alive
                 _next_state.set(x, y, ALIVE);
                 continue;
             }
 
+            // If it's dead or alive and should be dead
             _next_state.set(x, y, DEAD);
         }
     }
 
+    // Swap the states
     std::swap(_current_state, _next_state);
 }
 
@@ -412,6 +421,7 @@ void World::step(bool toroidal) {
  *      wraps to the right edge and the top to the bottom. Defaults to false.
  */
 void World::advance(int steps, bool toroidal) {
+    // Step the world steps amount times
     for (int i = 0; i < steps; i++) {
         step(toroidal);
     }

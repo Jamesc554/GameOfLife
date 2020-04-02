@@ -74,8 +74,7 @@ Grid::Grid(int square_size) : Grid(square_size, square_size) {}
  *      The height of the grid.
  */
 Grid::Grid(int width, int height) {
-    // Create a new 2D array of cells [x][y] and populate it with DEAD cells
-
+    // Create a new Vector of Cells
     _width = width;
     _height = height;
 
@@ -188,6 +187,7 @@ int Grid::get_total_cells() const {
  *      The number of alive cells.
  */
 int Grid::get_alive_cells() const {
+    // Loop over and count all alive cells
     int count = 0;
     for (int i = 0; i < _width * _height; i++) {
         if (cells[i] == ALIVE)
@@ -221,6 +221,7 @@ int Grid::get_alive_cells() const {
  *      The number of dead cells.
  */
 int Grid::get_dead_cells() const {
+    // Loop over and count all dead cells
     int count = 0;
     for (int i = 0; i < _width * _height; i++) {
         if (cells[i] == DEAD)
@@ -412,7 +413,7 @@ void Grid::set(int x, int y, Cell value) {
  */
 Cell &Grid::operator()(int x, int y) {
     if (!valid_coordinate(x, y)) {
-        throw std::exception();
+        throw std::runtime_error("Invalid Coordinate");
     } else {
         return cells[get_index(x, y)];
     }
@@ -450,7 +451,7 @@ Cell &Grid::operator()(int x, int y) {
  */
 const Cell &Grid::operator()(int x, int y) const {
     if (!valid_coordinate(x, y)) {
-        throw std::exception();
+        throw std::runtime_error("Invalid Coordinate");
     } else {
         return cells.at(get_index(x, y));
     }
@@ -491,11 +492,14 @@ const Cell &Grid::operator()(int x, int y) const {
  *      or if the crop window has a negative size.
  */
 Grid Grid::crop(int x0, int y0, int x1, int y1) const {
+    // Make sure that all coordinates are valid
     if (x0 < 0 || x1 > _width || y0 < 0 || y1 > _height || x1 - x0 < 0 || y1 - y0 < 0) {
         throw std::exception();
     }
 
+    // Create a new grid
     Grid newGrid = Grid(x1 - x0, y1 - y0);
+    // Assign each value from the old grid
     for (int y = y0; y < y1; y++) {
         for (int x = x0; x < x1; x++) {
             newGrid.set(x - x0, y - y0, get(x, y));
@@ -542,7 +546,7 @@ Grid Grid::crop(int x0, int y0, int x1, int y1) const {
  * @throws
  *      std::exception or sub-class if the other grid being placed does not fit within the bounds of the current grid.
  */
-void Grid::merge(Grid other, int x0, int y0, bool alive_only) {
+void Grid::merge(const Grid& other, int x0, int y0, bool alive_only) {
     // Check if other grid will fit onto current grid, with given coordinates
     if (!valid_coordinate(x0, y0) || !valid_coordinate(x0 + other.get_width() - 1, y0 + other.get_height() - 1)) {
         throw std::exception();
@@ -553,6 +557,7 @@ void Grid::merge(Grid other, int x0, int y0, bool alive_only) {
 
     for (int y = 0, yy = y0; y < other.get_height(); y++, yy++) {
         for (int x = 0, xx = x0; x < other.get_width(); x++, xx++) {
+            // If we're checking alive only, make sure the cell is alive, else just copy it over
             !alive_only ? set(xx, yy, other.get(x, y)) : other.get(x, y) == ALIVE ? set(xx, yy, other.get(x, y)) : set(
                     xx, yy, get(xx, yy));
         }
@@ -657,9 +662,11 @@ Grid Grid::rotate(int rotation) const {
  *      Returns a reference to the output stream to enable operator chaining.
  */
 std::ostream &operator<<(std::ostream &output_stream, const Grid &grid) {
+    // Loop through the grid, with an extra value on each side for the border
     for (int y = -1; y <= grid.get_height(); y++) {
         for (int x = -1; x <= grid.get_width(); x++) {
             char character;
+            // If the index is at the border, check what symbol it should be
             if (x == -1 || x == grid.get_width()) {
                 if (y == -1 || y == grid.get_height()) {
                     character = '+';
@@ -669,6 +676,7 @@ std::ostream &operator<<(std::ostream &output_stream, const Grid &grid) {
             } else if (y == -1 || y == grid.get_height()) {
                 character = '-';
             } else {
+                // If it's not at the border, check if dead or alive
                 character = grid.get(x, y) == ALIVE ? '#' : ' ';
             }
             output_stream << character;
@@ -679,6 +687,15 @@ std::ostream &operator<<(std::ostream &output_stream, const Grid &grid) {
     return output_stream;
 }
 
+/**
+ * Grid::to_string(x, y)
+ *
+ * Helper function to convert grid to ASCII string
+ * The function should be callable from a constant context.
+ *
+ * @return
+ *      string representing the grid in ASCII
+ */
 std::string Grid::to_string() const {
     std::stringstream ss;
     for (int y = 0; y < get_height(); y++) {
@@ -695,7 +712,6 @@ std::string Grid::to_string() const {
  * Grid::valid_coordinate(x, y)
  *
  * Helper function to determine if the 2d coordinate is valid in the grid.
- * Should not be visible from outside the Grid class.
  * The function should be callable from a constant context.
  *
  * @param x

@@ -66,7 +66,7 @@ public:
 
     Grid crop(int x0, int y0, int x1, int y1) const;
 
-    void merge(Grid other, int x0, int y0, bool alive_only = false);
+    void merge(const Grid& other, int x0, int y0, bool alive_only = false);
 
     Grid rotate(int rotation) const;
 

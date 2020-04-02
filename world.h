@@ -45,7 +45,7 @@ public:
 
     int get_dead_cells() const;
 
-    const Grid get_state() const;
+    const Grid& get_state() const;
 
     void resize(int square_size);
 

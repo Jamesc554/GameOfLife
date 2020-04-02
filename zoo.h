@@ -31,4 +31,4 @@ namespace Zoo {
     Grid load_binary(const std::string& filePath);
 
     void save_binary(const std::string& filePath, const Grid& grid);
-};
+}
